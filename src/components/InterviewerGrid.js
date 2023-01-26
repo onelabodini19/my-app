@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from "axios";
 import PropTypes from 'prop-types';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQueries } from "react-query";
 import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 
 
@@ -13,24 +13,19 @@ import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 const getUsers = () => axios.get("http://localhost:8090/api/user").then((res) => res.data);
 const getDepartments = () => axios.get("http://localhost:8090/api/department").then((res) => res.data);
 const getInterviewers = () => axios.get("http://localhost:8090/api/interviewer").then((res) => res.data);
-const createInterviewer = (newInterviewer) => axios.post("http://localhost:8090/api/interviewer/", JSON.stringify(
-    {
-        userId: 32,
-        departemntId: 4,
-        ...newInterviewer
-    }), {
+const createInterviewer = (newInterviewer) => axios.post("http://localhost:8090/api/interviewer", JSON.stringify(newInterviewer), {
     headers: {
         'Content-Type': 'application/json'
     }
 }).then((res) => res.data);
 
-const updateInterviewer = (inputValue) => axios.put("http://localhost:8090/api/interviewer/3", JSON.stringify(inputValue), {
+const updateInterviewer = (inputValue) => axios.put(`http://localhost:8090/api/interviewer/${inputValue.interviewerId}`, JSON.stringify(inputValue), {
     headers: {
         'Content-Type': 'application/json'
     }
 }).then((res) => res.data);
 
-const deleteInterviewer = (deleteValue) => axios.delete("http://localhost:8090/api/interviewer/25", JSON.stringify(deleteValue), {
+const deleteInterviewer = (deleteValue) => axios.delete(`http://localhost:8090/api/interviewer/${deleteValue}`, {
     headers: {
         'Content-Type': 'application/json'
     }
@@ -139,62 +134,48 @@ const columns = [
         width: 150,
         editable: true
     }
-
-
-
 ];
 
 export default function Grid() {
     const [newInterviewer, setNewInterviewer] = useState({})
     const [interviewers, setInterviewers] = useState([])
     const [interviewerSelected, setInterviewerSelected] = useState({});
-    const [users, setUsers] = useState([])
-    const [departments, setDepartments] = useState([])
+    const [userId, setUserId] = useState("");
+    const [departmentId, setDepartmentId] = useState("");
+    const [users, setUsers] = useState([{ 'userId': '' }])
+    const [departments, setDepartments] = useState([{ 'departmentId': '' }])
 
-    // const [interviewersQuery, usersQuery, departmentsQuery] = useQueries({
-    //     queries: [
-    //         {
-    //             queryKey: ['interviewers'],
-    //             queryFn: () =>
-    //                 getInterviewers(),
-    //             onSuccess: (data) => {
-    //                 setInterviewers(data)
-    //             }
-    //         },
-    //         {
-    //             queryKey: ['users'],
-    //             queryFn: () =>
-    //                 getUsers(),
-    //             onSuccess: (data) => {
-    //                 setUsers(data)
-    //             }
-    //         },
-    //         {
-    //             queryKey: ['departments'],
-    //             queryFn: () =>
-    //                 getDepartments(),
-    //             onSuccess: (data) => {
-    //                 setDepartments(data)
-    //             }
-    //         },
-    //     ],
-    // });
-
-
-    const { isLoading, isError, data, error, refetch } = useQuery(["interviewer"], () => getInterviewers(),
+    const [interviewersQuery, usersQuery, departmentsQuery] = useQueries([
         {
+            queryKey: ['interviewers'],
+            queryFn: () =>
+                getInterviewers(),
             onSuccess: (data) => {
                 setInterviewers(data)
             }
-        });
+        },
+        {
+            queryKey: ['users'],
+            queryFn: () =>
+                getUsers(),
+            onSuccess: (data) => {
+                setUsers(data)
+            }
+        },
+        {
+            queryKey: ['departments'],
+            queryFn: () =>
+                getDepartments(),
+            onSuccess: (data) => {
+                setDepartments(data)
+            }
+        },
+    ],
+    );
 
 
     const createInterviewerMutation = useMutation(createInterviewer, {
         onSuccess: (data) => {
-            setInterviewers([
-                ...interviewers
-            ].push(data))
-
         }
     });
 
@@ -208,22 +189,19 @@ export default function Grid() {
         }
     });
 
-    if (isLoading) return "Loading...";
-    if (error) return "An error has occurred: " + error.message;
 
+    if (interviewersQuery.isLoading) return 'Loading Interviewers...';
+    if (usersQuery.isLoading) return 'Loading Users...';
+    if (departmentsQuery.isLoading) return 'Loading Departments...';
 
-    // if (interviewersQuery.isLoading) return 'Loading Interviewers...';
-    // if (usersQuery.isLoading) return 'Loading Users...';
-    // if (departmentsQuery.isLoading) return 'Loading Departments...';
+    if (interviewersQuery.error)
+        return 'An error has occurred: ' + interviewersQuery.error.message;
 
-    // if (interviewersQuery.error)
-    //     return 'An error has occurred: ' + interviewersQuery.error.message;
+    if (usersQuery.error)
+        return 'An error has occurred: ' + usersQuery.error.message;
 
-    // if (usersQuery.error)
-    //     return 'An error has occurred: ' + usersQuery.error.message;
-
-    // if (departmentsQuery.error)
-    //     return 'An error has occurred: ' + departmentsQuery.error.message;
+    if (departmentsQuery.error)
+        return 'An error has occurred: ' + departmentsQuery.error.message;
 
 
     const handleFormChange = (e) => {
@@ -237,7 +215,13 @@ export default function Grid() {
 
     const handleFormSubmit = (e) => {
         e.preventDefault();
-        createInterviewerMutation.mutate(newInterviewer)
+        const interviewer=({
+            ...newInterviewer,
+            userId,
+            departmentId
+        })
+    
+        createInterviewerMutation.mutate(interviewer)
     }
 
     const handleCellKeyDown = (params, event, details) => {
@@ -254,25 +238,27 @@ export default function Grid() {
 
 
     const handleCellClick = (e) => {
-        setInterviewerSelected(e);
+        console.log(e);
+        setInterviewerSelected(e.row);
     };
 
     const handleDelete = () => {
         const deletedRows = [...interviewers];
-        const idx = deletedRows.findIndex(i => i.interviewerId === interviewerSelected.id);
+        const idx = deletedRows.findIndex(i => i.interviewerId === interviewerSelected.interviewerId);
         if (idx > -1) {
             deletedRows.splice(idx, 1);
             setInterviewers(deletedRows);
+            deleteInterviewerMutation.mutate(interviewerSelected.interviewerId);
         }
-        deleteInterviewerMutation.mutate(deletedRows);
+        
     };
 
     const handleUserChange = (event) => {
-        setUsers(event.target.value);
+        setUserId(event.target.value);
     };
 
     const handleDepartmentChange = (event) => {
-        setDepartments(event.target.value);
+        setDepartmentId(event.target.value);
     };
 
 
@@ -294,18 +280,24 @@ export default function Grid() {
             <form onSubmit={handleFormSubmit}>
                 <InputLabel >UserId</InputLabel>
                 <Select
-                    value={users}
+                    value={userId}
                     onChange={handleUserChange}
                     label="userId">
-                    <MenuItem value={users}></MenuItem>
+                    {users.map(user => (
+                        <MenuItem value={user.userId} key={user.userId}>{user.userId}</MenuItem>
+                    ))
+                    }
                 </Select>
 
                 <InputLabel >DepartmentId</InputLabel>
                 <Select
-                    value={departments}
+                    value={departmentId}
                     onChange={handleDepartmentChange}
                     label="departmentId">
-                    <MenuItem value={departments}></MenuItem>
+                    {departments.map(department => (
+                        <MenuItem value={department.departmentId} key={department.departmentId}>{department.departmentId}</MenuItem>
+                    ))
+                    }
                 </Select>
 
                 <input
