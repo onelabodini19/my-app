@@ -176,6 +176,21 @@ export default function Grid() {
 
     const createInterviewerMutation = useMutation(createInterviewer, {
         onSuccess: (data) => {
+            const interviewer={
+                availability: data.availability,
+                departmentName:data.department.departmentName,
+                email:data.user.email,
+                interviewerId: data.interviewerId,
+                name:data.user.name,
+                notes:data.notes,
+                phone:data.user.phone,
+                position:data.position
+            }
+            
+            setInterviewers([
+                ...interviewers,
+                interviewer
+            ]);
         }
     });
 
