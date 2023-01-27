@@ -176,6 +176,10 @@ export default function Grid() {
 
     const createInterviewerMutation = useMutation(createInterviewer, {
         onSuccess: (data) => {
+            
+                setNewInterviewer(...interviewers, data);
+    
+            
         }
     });
 
