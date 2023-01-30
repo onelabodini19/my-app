@@ -1,17 +1,29 @@
 
 import './App.css';
-import InterviewerGrid from './components/InterviewerGrid';
+import Interviewer from './components/Interviewer';
+import Candidate from './components/Candidate'
 import {
-QueryClientProvider, QueryClient} from 'react-query';
+  QueryClientProvider, QueryClient
+} from 'react-query';
+import {
+  BrowserRouter as Router, Routes, Route
+} from "react-router-dom";
 
 
-const queryClient=new QueryClient();
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-    <InterviewerGrid />
+
+      <Router>
+        <Routes>
+          <Route path="/" element={<Interviewer />} />
+          <Route path="/candidate" element={<Candidate />} />
+        </Routes>
+      </Router>
     </QueryClientProvider>
-  
+
   );
 
 }
