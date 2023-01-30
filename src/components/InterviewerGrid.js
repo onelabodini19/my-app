@@ -240,7 +240,7 @@ export default function Grid() {
     }
 
     const handleCellKeyDown = (params, event, details) => {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             const modifiedInterviewer = {
                 ...params.row,
                 [params.field]: event.target.value
