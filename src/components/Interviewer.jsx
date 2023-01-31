@@ -172,6 +172,7 @@ export default function Grid() {
         },
     ],
     );
+    
 
 
     const createInterviewerMutation = useMutation(createInterviewer, {
@@ -240,7 +241,7 @@ export default function Grid() {
     }
 
     const handleCellKeyDown = (params, event, details) => {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             const modifiedInterviewer = {
                 ...params.row,
                 [params.field]: event.target.value
@@ -279,6 +280,7 @@ export default function Grid() {
 
     return (
         <div className='grid-container' style={{ height: 300, width: '50%', marginLeft: 600, marginTop: 100 }} >
+
 
             <DataGrid
                 rows={interviewers}
